@@ -1,10 +1,10 @@
 const mongoose=require('mongoose')
 const bookingSchema=new mongoose.Schema({
-    bookingDate:{
+    service:{
         type:String,
         required:true
     },
-    time:{
+    bookingDate:{
         type:String,
         required:true
     },
