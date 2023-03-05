@@ -8,6 +8,10 @@ const bookingSchema=new mongoose.Schema({
         type:String,
         required:true
     },
+    time:{
+        type:String,
+        required:true
+    },
     patientName:{
         type:String,
         required:true

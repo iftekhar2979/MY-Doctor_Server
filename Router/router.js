@@ -13,10 +13,15 @@ router.get('/appointments', async (req, res) => {
   try {
     const appointments = await appoinmentModel.find({});
     const bookedAppointments=await bookingModel.find({bookingDate:date})
-    console.log(bookedAppointments)
-    // appoinmentModel.forEach(element => {
-    //     const alreadyBooked=bookedAppointments.filter(item=>item.===element.slots)
-    // });
+    
+    // console.log('form booked appoinment',bookedAppointments)
+    // console.log('booked appointment',bookedAppointments)
+    appointments.forEach(element => {
+     const filteredAppointment=bookedAppointments.filter(item=>item.service===element.name)
+    const bookedService=filteredAppointment.map(item=>item.time)
+    const remainingSlot=element.slots.filter(slot=>!bookedService.includes(slot))
+    console.log(date , element.name,remainingSlot.length)
+    });
     // console.log(bookedAppointments)
     res.send(appointments);
   } catch (error) {
@@ -27,7 +32,6 @@ router.get('/appointments', async (req, res) => {
 
 router.post('/booking', async (req, res) => {
     const bookingProperty = req.body;
-    console.log(bookingProperty)
    addPosting(bookingModel,bookingProperty,res,201)
   });
 
