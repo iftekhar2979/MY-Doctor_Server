@@ -2,7 +2,9 @@ const express = require('express');
 const addPosting = require('../function/addPosting');
 const appoinmentModel = require('../Model/appointmentModel');
 const bookingModel = require('../Model/bookingModel');
+const userModel = require('../Model/userSchema');
 const router = new express.Router();
+const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
   res.send('HI I aam the server');
@@ -105,6 +107,34 @@ router.get('/userbooking',async(req,res)=>{
  const email=req.query.email
   const bookedAppointments=await bookingModel.find({email})
  res.send(bookedAppointments)
+})
+router.post("/createUser",async(req,res)=>{
+  const user=req.body
+  delete user.password
+  delete user.confirmPassoword
+  delete user.termandCondition
+  // console.log(user)
+  addPosting(userModel,user,res,200)
+ 
+})
+router.post('/jwt',async(req,res)=>{
+  const userEmail=req.body.email
+  try{
+    const findEmail=await userModel.findOne({email:userEmail})
+   const {displayName,email}=findEmail
+    const token = jwt.sign({displayName,email}, process.env.TOKEN, { expiresIn: '1h' });
+   return res.send(token);
+  }
+  catch(error){
+    console.log(error)
+   return  res.send({error:error.message})
+  }
+})
+router.get('/findLoggedInUser',async(req,res)=>{
+  const user=req.query
+  const findUser=await userModel.findOne(user)
+  res.send(findUser)
+
 })
 // router.post('/booking', async (req, res) => {
 //     const bookingProperty = req.body;
