@@ -5,7 +5,25 @@ const bookingModel = require('../Model/bookingModel');
 const userModel = require('../Model/userSchema');
 const router = new express.Router();
 const jwt = require('jsonwebtoken');
+const { Query } = require('mongoose');
 
+const varifyJWT=(req,res,next)=>{
+const authHeaders=req.headers.authorization
+
+if(!authHeaders){
+return  res.status(403).send({error:"UnAuthorized access"})
+}
+const token=authHeaders.split(' ')[1]
+
+jwt.verify(token,process.env.TOKEN,function(error,decoded){
+  if(error){
+    return res.status(403).send({error:'UnAuthorized Access'})
+  }
+  req.decoded =decoded
+  next()
+
+})
+}
 router.get('/', async (req, res) => {
   res.send('HI I aam the server');
 });
@@ -103,30 +121,41 @@ router.post('/booking',async(req,res)=>{
     return res.status(404).send({ error: error.message });
   }
 })
-router.get('/userbooking',async(req,res)=>{
+router.get('/userbooking',varifyJWT,async(req,res)=>{
  const email=req.query.email
-  const bookedAppointments=await bookingModel.find({email})
- res.send(bookedAppointments)
+ const decodedEmail=req.decoded
+
+
+ if(decodedEmail.email===email){
+   const bookedAppointments=await bookingModel.find({email})
+ return res.send(bookedAppointments)
+
+ }
+return res.send({error:'UnAuthorized Public'})
 })
 router.post("/createUser",async(req,res)=>{
   const user=req.body
   delete user.password
   delete user.confirmPassoword
   delete user.termandCondition
+  const users=await userModel.find({})
+if(users.includes(user.email)){
+  console.log('user already added')
+  return res.send({error:'email address already added'})
+}
   // console.log(user)
   addPosting(userModel,user,res,200)
  
 })
 router.post('/jwt',async(req,res)=>{
-  const userEmail=req.body.email
+  const userEmail=req.query.email
   try{
     const findEmail=await userModel.findOne({email:userEmail})
-   const {displayName,email}=findEmail
-    const token = jwt.sign({displayName,email}, process.env.TOKEN, { expiresIn: '1h' });
+const {email}=findEmail
+    const token = jwt.sign({email}, process.env.TOKEN, { expiresIn: '1h' });
    return res.send(token);
   }
   catch(error){
-    console.log(error)
    return  res.send({error:error.message})
   }
 })
@@ -135,6 +164,55 @@ router.get('/findLoggedInUser',async(req,res)=>{
   const findUser=await userModel.findOne(user)
   res.send(findUser)
 
+})
+router.get('/allUser',async(req,res)=>{
+  try{
+const users=await userModel.find({})
+return res.send(users)
+  }catch(error){
+    return res.send({errorName:error.name,error:error.message})
+  }
+})
+router.put('/dashboard/admin/:id',varifyJWT,async(req,res)=>{
+ 
+  try{
+    const id = req.params.id
+    const decodedEmail=req.decoded.email
+    const filterEmail={email:decodedEmail}
+    const findEmail=await userModel.findOne(filterEmail)
+    if(findEmail.role!=='admin'){
+      return res.send({error:'UnAuthorized access admin'})
+    }
+
+    const query={_id:id}  
+    const role=req.body
+    const findId=await userModel.findByIdAndUpdate(query,role,{
+      returnOriginal: false
+    })
+
+  return  res.send(findId)
+   
+  }catch(err){
+    console.log(err.message)
+    return res.send({error:err.message})
+  }
+ 
+})
+router.delete('/delete',async(req,res)=>{
+  try{
+  const deletethings=await userModel.deleteMany({email:"ali@dora.com"})
+  res.send(deletethings)
+  }catch(err){
+    console.log(err)
+  }
+})
+router.get('/user/admin/:email',async(req,res)=>{
+  const adminId=req.params.email
+  console.log(adminId)
+  const query={email:adminId}
+  const findAdmin=await userModel.findOne(query)
+  console.log(findAdmin)
+  res.send({isAdmin:findAdmin?.role==='admin'})
 })
 // router.post('/booking', async (req, res) => {
 //     const bookingProperty = req.body;
