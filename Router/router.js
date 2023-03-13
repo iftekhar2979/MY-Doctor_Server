@@ -1,11 +1,13 @@
 const express = require('express');
 const addPosting = require('../function/addPosting');
+const getFromDatabase = require('../function/getFromDatabase');
 const appoinmentModel = require('../Model/appointmentModel');
 const bookingModel = require('../Model/bookingModel');
 const userModel = require('../Model/userSchema');
 const router = new express.Router();
 const jwt = require('jsonwebtoken');
 const { Query } = require('mongoose');
+const doctorModel = require('../Model/addDoctor');
 
 const varifyJWT=(req,res,next)=>{
 const authHeaders=req.headers.authorization
@@ -147,6 +149,23 @@ if(users.includes(user.email)){
   addPosting(userModel,user,res,200)
  
 })
+router.post('/doctors',async(req,res)=>{
+  const doctor=req.body
+  addPosting(doctorModel, doctor, res,200)
+})
+router.get('/getDoctors',async(req,res)=>{
+  getFromDatabase(doctorModel,res,200)
+})
+router.get('/specialities',async(req,res)=>{
+  try{
+    //aggregate project will findout your porperties which you have inputed value as 1
+    const result = await appoinmentModel.aggregate({}).project({name:1}) 
+   return res.send(result)
+
+  }catch(error){
+    return res.send({error:error.message})
+  }
+})
 router.post('/jwt',async(req,res)=>{
   const userEmail=req.query.email
   try{
@@ -200,7 +219,7 @@ router.put('/dashboard/admin/:id',varifyJWT,async(req,res)=>{
 })
 router.delete('/delete',async(req,res)=>{
   try{
-  const deletethings=await userModel.deleteMany({email:"ali@dora.com"})
+  const deletethings=await doctorModel.deleteMany({doctorEmail:"salminifti79@gmail.com"})
   res.send(deletethings)
   }catch(err){
     console.log(err)
@@ -208,9 +227,9 @@ router.delete('/delete',async(req,res)=>{
 })
 router.get('/user/admin/:email',async(req,res)=>{
   const adminId=req.params.email
-  console.log(adminId)
   const query={email:adminId}
   const findAdmin=await userModel.findOne(query)
+  console.log(findAdmin?.role==='admin')
   console.log(findAdmin)
   res.send({isAdmin:findAdmin?.role==='admin'})
 })
