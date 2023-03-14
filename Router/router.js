@@ -150,7 +150,12 @@ router.post('/doctors', async (req, res) => {
   
   addPosting(doctorModel, doctor, res, 200);
 });
+router.delete('/deleteDoctor/:id',async(req,res)=>{
+  const id=req.params.id
+  deletePost(doctorModel,id,res,200)
+})
 router.get('/getDoctors', async (req, res) => {
+ 
   getFromDatabase(doctorModel, res, 200);
 });
 router.get('/specialities', async (req, res) => {
@@ -208,21 +213,20 @@ router.put('/dashboard/admin/:id', varifyJWT, async (req, res) => {
     return res.send({ error: err.message });
   }
 });
-router.delete('/delete', async (req, res) => {
-  try {
-    const deletethings = await doctorModel.deleteMany({
-      doctorEmail: 'salminifti79@gmail.com',
-    });
-    res.send(deletethings);
-  } catch (err) {
-    console.log(err);
-  }
-});
-router.delete('/deleteDoctor/:id',async(req,res)=>{
-  const id=req.params.id
-  const query={_id:id}
-  deletePost(doctorModel,query,res,200)
-})
+// router.delete('/delete', async (req, res) => {
+//   try {
+//     const deletethings = await doctorModel.deleteMany({
+//       doctorEmail: 'salminifti79@gmail.com',
+//     });
+//     res.send(deletethings);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
+// router.delete('/deleteDoctor/:id',async(req,res)=>{
+//   const id=req.params.id
+//   console.log(id)
+// })
 router.get('/user/admin/:email', async (req, res) => {
   const adminId = req.params.email;
   const query = { email: adminId };

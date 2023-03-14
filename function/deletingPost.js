@@ -1,7 +1,11 @@
 async function deletingPost(collection, id, res, statusCode) {
     try {
       const savePostingData = await collection.findByIdAndDelete(id);
-      return res.status(statusCode).send({isDeleted:true,savePostingData});
+      res.status(200).send({
+        message: 'profile deleted Successfully',
+        idDeleted: true,
+        savePostingData,
+      });
     } catch (error) {
       if (error) statusCode = 404;
       console.log(error);
