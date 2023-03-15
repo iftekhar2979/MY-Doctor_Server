@@ -16,14 +16,27 @@ const varifyJWT = (req, res, next) => {
     return res.status(403).send({ error: 'UnAuthorized access' });
   }
   const token = authHeaders.split(' ')[1];
+  
 
   jwt.verify(token, process.env.TOKEN, function (error, decoded) {
     if (error) {
+      console.log(error)
       return res.status(403).send({ error: 'UnAuthorized Access' });
     }
     req.decoded = decoded;
+    
+    
     next();
   });
+};
+const varifyAdmin = async(req, res, next) => {
+  const decodedEmail = req.decoded.email;
+    const filterEmail = { email: decodedEmail };
+    const findEmail = await userModel.findOne(filterEmail);
+    if (findEmail.role !== 'admin') {
+      return res.send({ error: 'UnAuthorized access admin' });
+    }
+  next();
 };
 router.get('/', async (req, res) => {
   res.send('HI I aam the server');
@@ -145,17 +158,15 @@ router.post('/createUser', async (req, res) => {
   // console.log(user)
   addPosting(userModel, user, res, 200);
 });
-router.post('/doctors', async (req, res) => {
+router.post('/doctors',varifyJWT,varifyAdmin, async (req, res) => {
   const doctor = req.body;
-  
   addPosting(doctorModel, doctor, res, 200);
 });
-router.delete('/deleteDoctor/:id',async(req,res)=>{
-  const id=req.params.id
-  deletePost(doctorModel,id,res,200)
-})
-router.get('/getDoctors', async (req, res) => {
- 
+router.delete('/deleteDoctor/:id',varifyJWT,varifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  deletePost(doctorModel, id, res, 200);
+});
+router.post('/getDoctors',varifyJWT,varifyAdmin, async (req, res) => {
   getFromDatabase(doctorModel, res, 200);
 });
 router.get('/specialities', async (req, res) => {
@@ -183,7 +194,8 @@ router.get('/findLoggedInUser', async (req, res) => {
   const findUser = await userModel.findOne(user);
   res.send(findUser);
 });
-router.get('/allUser', async (req, res) => {
+router.get('/allUser',varifyJWT,varifyAdmin, async (req, res) => {
+ 
   try {
     const users = await userModel.find({});
     return res.send(users);
